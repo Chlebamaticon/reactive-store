@@ -21,7 +21,7 @@ State creation:
 // file: counterState.jsx
 import { map, merge, bufferTime } from "rxjs/operators";
 import { interval } from "rxjs";
-import { createState } from "../lib/store";
+import { createState } from "@dawiidio/reactive-store";
 
 export const counter = createState(
   // first argument - initial state
@@ -53,6 +53,7 @@ How to connect component and state:
 ```jsx harmony
 // file: Counter.jsx
 import { counter } from 'counterState.jsx'; 
+import { withStore } from '@dawiidio/reactive-store'; 
 
 export function _Counter({ counter, increment }) {
   // increment(value) is action from our state and it is equal to
