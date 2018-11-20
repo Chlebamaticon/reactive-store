@@ -1,6 +1,6 @@
 {
   "name": "@dawiidio/reactive-store",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Ractive store with RxJS for React",
   "main": "./lib/index.js",
   "typings": "./src/index.d.ts",

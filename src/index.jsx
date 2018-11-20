@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { Subject } from "rxjs";
+import { Subject, BehaviorSubject } from "rxjs";
 import { of } from "rxjs";
 import { publishReplay, refCount, merge, scan, map, skip } from "rxjs/operators";
 
@@ -11,7 +11,7 @@ class Prevent extends PureComponent {
 }
 
 export function withStore(...localStates) {
-  return createStoreConnectComponent(createRootState(...localStates));
+  return createStoreConnectComponent(createMergedState(...localStates));
 }
 
 export function createStoreConnectComponent({ actions: rxActions, state$ }) {
@@ -79,8 +79,14 @@ export function createActions(actionPairs) {
 }
 
 export function createState(initialState, actionFactories) {
-  const actionPairs = createActionPairs(actionFactories);
-  const actions = createActions(actionPairs);
+  const _actionFactories = {
+    ...actionFactories,
+    reset(subject) {
+      return subject.pipe( map(() => () => initialState) );
+    }
+  }
+  const actionPairs = createActionPairs(_actionFactories);
+  const actions = createActions(actionPairs, initialState);
 
   const state$ = of(initialState).pipe(
     merge( ...actionPairs.map( ([ , { observable } ]) => observable) ),
@@ -96,7 +102,7 @@ export function createState(initialState, actionFactories) {
   }
 }
 
-export function createRootState(...localStates) {
+export function createMergedState(...localStates) {
   let localStateObservers = [];
   let rootInitialState = {};
   let rootActions = {};
@@ -129,4 +135,10 @@ export function createRootState(...localStates) {
     state$,
     initialState: rootInitialState
   }
+}
+
+export function resetState(...states) {
+  for (const { actions } of states)
+    if ( actions.reset ) 
+      actions.reset();
 }
