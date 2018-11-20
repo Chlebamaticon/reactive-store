@@ -3,10 +3,11 @@
   "version": "0.0.1",
   "description": "Ractive store with RxJS for React",
   "main": "./lib/index.js",
-  "typings": "./index.d.ts",
+  "typings": "./src/index.d.ts",
   "files": [
     "lib/index.js",
-    "index.d.ts"
+    "src/index.d.ts",
+    "src/index.js"
   ],
   "author": "Dawid Wojda <dawiidio@gmail.com>",
   "scripts": {
