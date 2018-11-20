@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 import React, { PureComponent } from 'react';
 import { Subject } from "rxjs";
 import { of } from "rxjs";
@@ -57,31 +55,37 @@ export function createStoreConnectComponent({ actions: rxActions, state$ }) {
   };
 }
 
-export function createState(initialState, actionsFactories) {
-  const actionsArr = Object
-    .entries(actionsFactories)
-    .map(([key, action]) => {
-      const subjectForAction = new Subject();
-      const actionObservable = action(subjectForAction);
+export function createActionPairs(actionFactories) {
+  return Object
+    .entries(actionFactories)
+    .map(([ key, action ]) => {
+      const subject = new Subject();
+      const observable = action(subject);
 
-      return { key, actionObservable };
+      return [ key, { subject, observable } ];
     });
+}
 
-  const actions = actionsArr.reduce((acc, val) => {
-    const { key, actionObservable } = val;
+export function createActions(actionPairs) {
+  return actionPairs
+    .reduce((acc, actionPair) => {
+      const [ 
+        key, 
+        { subject, observable } 
+      ] = actionPair;
 
-    return {
-      ...acc,
-      [key]: (value) => {
-        return actionObservable.next(value);
-      }
-    }
-  }, {});
+      return { ...acc, [ key ]: value => subject.next(value) };
+    }, {});
+}
+
+export function createState(initialState, actionFactories) {
+  const actionPairs = createActionPairs(actionFactories);
+  const actions = createActions(actionPairs);
 
   const state$ = of(initialState).pipe(
-    merge(...actionsArr.map(({ actionObservable }) => actionObservable)),
-    scan((state, reducerFn) => reducerFn(state)),
-    publishReplay(1),
+    merge( ...actionPairs.map( ([ , { observable } ]) => observable) ),
+    scan( (state, reducerFn) => reducerFn(state) ),
+    publishReplay( 1 ),
     refCount(),
   );
 
