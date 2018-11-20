@@ -2,8 +2,12 @@
   "name": "@dawiidio/reactive-store",
   "version": "0.0.1",
   "description": "Ractive store with RxJS for React",
-  "main": "./lib/index.jsx",
+  "main": "./lib/index.js",
   "typings": "./index.d.ts",
+  "files": [
+    "lib/index.js",
+    "index.d.ts"
+  ],
   "author": "Dawid Wojda <dawiidio@gmail.com>",
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --config webpack.config.js",
