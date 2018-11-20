@@ -126,6 +126,7 @@ export function createRootState(...localStates) {
 
   return {
     actions: rootActions,
-    state$
+    state$,
+    initialState: rootInitialState
   }
 }
