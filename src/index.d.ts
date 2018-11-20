@@ -4,7 +4,6 @@
 /// <reference types="react" />
 /// <reference types="rxjs" />
 
-
 import * as React from 'react';
 import { Subject, Observable, Observer } from 'rxjs';
 
@@ -53,7 +52,8 @@ export function createState<S extends State = State>(
 
 interface MergedStateProduct<S extends State = State> {
   state$: Observable<S>,
-  actions: Action<S>
+  actions: Action<S>,
+  initialState: S
 }
 
 
@@ -67,10 +67,3 @@ export function createRootState<T extends StateProduct, A extends StateProduct, 
 export function createRootState<T extends StateProduct, A extends StateProduct, B extends StateProduct, C extends StateProduct, D extends StateProduct, E extends StateProduct, F extends StateProduct, G extends StateProduct>(s0: T, s1: A, s2: B, s3: C, s4: D, s5: E, s6: F, s7: G): MergedStateProduct<ExtractState<T> & ExtractState<A> & ExtractState<B> & ExtractState<C> & ExtractState<D> & ExtractState<E> & ExtractState<F> & ExtractState<G>>;
 export function createRootState<T extends StateProduct, A extends StateProduct, B extends StateProduct, C extends StateProduct, D extends StateProduct, E extends StateProduct, F extends StateProduct, G extends StateProduct, H extends StateProduct>(s0: T, s1: A, s2: B, s3: C, s4: D, s5: E, s6: F, s7: G, s8: H): MergedStateProduct<ExtractState<T> & ExtractState<A> & ExtractState<B> & ExtractState<C> & ExtractState<D> & ExtractState<E> & ExtractState<F> & ExtractState<G> & ExtractState<H>>;
 export function createRootState<T extends StateProduct, A extends StateProduct, B extends StateProduct, C extends StateProduct, D extends StateProduct, E extends StateProduct, F extends StateProduct, G extends StateProduct, H extends StateProduct, I extends StateProduct>(s0: T, s1: A, s2: B, s3: C, s4: D, s5: E, s6: F, s7: G, s8: H, s9: I): MergedStateProduct<ExtractState<T> & ExtractState<A> & ExtractState<B> & ExtractState<C> & ExtractState<D> & ExtractState<E> & ExtractState<F> & ExtractState<G> & ExtractState<H> & ExtractState<I>>;
-
-export default {
-  createActionPairs,
-  createActions,
-  createRootState,
-  createState
-};
