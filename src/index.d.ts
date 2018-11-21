@@ -38,18 +38,19 @@ type ActionPairs<S = any> = Pair<string, ActionPair<S>>;
 export function createActionPairs<S = any>(actionFactories: ActionObservableFactoryMap<S>): ActionPairs<S>;
 export function createActions<S = any>(actionPairs: ActionPairs<S>): ActionMap<S>;
 
-interface StateProduct<S extends State = State> {
+interface StateProduct<S extends State = State, A extends ActionMap<S>> {
   state$: Observable<S>,
-  actions: ActionMap<S>,
+  actions: A,
   initialState: S
 }
 
 type ExtractState<S extends StateProduct> = S['initialState'];
+type ExtractActions<S extends StateProduct> = S['actions'];
 
-export function createState<S extends State = State>(
-  initialState: S, 
-  actionFactories: ActionObservableFactoryMap<S>
-): StateProduct<S>;
+export function createState<S extends State = State, A = any>(
+  initialState: S,
+  actionFactories: A
+): StateProduct<S, A>;
 
 export function createMergedState<T extends StateProduct>(s0: T): StateProduct<ExtractState<T>>;
 export function createMergedState<T extends StateProduct, A extends StateProduct>(s0: T, s1: A): StateProduct<ExtractState<T> & ExtractState<A>>;
@@ -63,3 +64,31 @@ export function createMergedState<T extends StateProduct, A extends StateProduct
 export function createMergedState<T extends StateProduct, A extends StateProduct, B extends StateProduct, C extends StateProduct, D extends StateProduct, E extends StateProduct, F extends StateProduct, G extends StateProduct, H extends StateProduct, I extends StateProduct>(s0: T, s1: A, s2: B, s3: C, s4: D, s5: E, s6: F, s7: G, s8: H, s9: I): StateProduct<ExtractState<T> & ExtractState<A> & ExtractState<B> & ExtractState<C> & ExtractState<D> & ExtractState<E> & ExtractState<F> & ExtractState<G> & ExtractState<H> & ExtractState<I>>;
 
 export function resetState(...states: StateProduct[]): void;
+
+interface Selector<S extends Record> {
+  (fragment: S): any
+}
+
+type Selectors<A extends StateProduct> = [ 
+  Selector< ExtractState< A > >, Selector< ExtractActions< A > >
+];
+type Selectors<A extends StateProduct, B extends StateProduct> = [ 
+  Selector< ExtractState< A > & ExtractState< B > >,
+  Selector< ExtractActions< A > & ExtractState< B > >
+];
+
+interface WithStoreDecorator {
+  <C extends React.ComponentClass>(c: C): C,
+  <C extends React.StatelessComponent>(c: C): C,
+}
+
+export function withStore<A extends StateProduct>(states: [ A ], stateSelector: Selector< ExtractState< A > >, actionsSelector: Selector< ExtractActions< A > >): WithStoreDecorator;
+export function withStore<A extends StateProduct, B extends StateProduct>(states: [ A, B ], stateSelector: Selector< ExtractState< A > & ExtractState< B > >, actionsSelector: Selector< ExtractActions< A > & ExtractActions< B > >): WithStoreDecorator;
+export function withStore<A extends StateProduct, B extends StateProduct, C extends StateProduct>(states: [ A, B, C ], stateSelector: Selector< ExtractState< A > & ExtractActions< B > & ExtractActions< C > >, actionsSelector: Selector< ExtractActions<A> & ExtractActions< B > & ExtractActions< C > >): WithStoreDecorator;
+export function withStore<A extends StateProduct, B extends StateProduct, C extends StateProduct, D extends StateProduct>(states: [ A, B, C, D ], stateSelector: Selector< ExtractState<A> & ExtractState<B> & ExtractState<C> & ExtractState<D> >, actionsSelector: Selector< ExtractActions<A> & ExtractActions<B> & ExtractActions<C> & ExtractActions<D> >): WithStoreDecorator;
+export function withStore<A extends StateProduct, B extends StateProduct, C extends StateProduct, D extends StateProduct, E extends StateProduct>(states: [ A, B, C, D, E ], stateSelector: Selector< ExtractState<A> & ExtractState<B> & ExtractState<C> & ExtractState<D> & ExtractState<E> >, actionsSelector: Selector< ExtractActions<A> & ExtractActions<B> & ExtractActions<C> & ExtractActions<D> & ExtractActions<E> >): WithStoreDecorator;
+export function withStore<A extends StateProduct, B extends StateProduct, C extends StateProduct, D extends StateProduct, E extends StateProduct, F extends StateProduct>(states: [ A, B, C, D, E, F ], stateSelector: Selector< ExtractState<A> & ExtractState<B> & ExtractState<C> & ExtractState<D> & ExtractState<E> & ExtractState<F> >, actionsSelector: Selector< ExtractActions<A> & ExtractActions<B> & ExtractActions<C> & ExtractActions<D> & ExtractActions<E> & ExtractActions<F> >): WithStoreDecorator;
+export function withStore<A extends StateProduct, B extends StateProduct, C extends StateProduct, D extends StateProduct, E extends StateProduct, F extends StateProduct, G extends StateProduct>(states: [ A, B, C, D, E, F, G ], stateSelector: Selector< ExtractState<A> & ExtractState<B> & ExtractState<C> & ExtractState<D> & ExtractState<E> & ExtractState<F> & ExtractState<G> >, actionsSelector: Selector< ExtractActions<A> & ExtractActions<B> & ExtractActions<C> & ExtractActions<D> & ExtractActions<E> & ExtractActions<F> & ExtractActions<G> >): WithStoreDecorator;
+export function withStore<A extends StateProduct, B extends StateProduct, C extends StateProduct, D extends StateProduct, E extends StateProduct, F extends StateProduct, G extends StateProduct, H extends StateProduct>(states: [ A, B, C, D, E, F, G, H ], stateSelector: Selector< ExtractState<A> & ExtractState<B> & ExtractState<C> & ExtractState<D> & ExtractState<E> & ExtractState<F> & ExtractState<G> & ExtractState<H> >, actionsSelector: Selector< ExtractActions<A> & ExtractActions<B> & ExtractActions<C> & ExtractActions<D> & ExtractActions<E> & ExtractActions<F> & ExtractActions<G> & ExtractActions<H> >): WithStoreDecorator;
+export function withStore<A extends StateProduct, B extends StateProduct, C extends StateProduct, D extends StateProduct, E extends StateProduct, F extends StateProduct, G extends StateProduct, H extends StateProduct, I extends StateProduct>(states: [ A, B, C, D, E, F, G, H, I ], stateSelector: Selector< ExtractState<A> & ExtractState<B> & ExtractState<C> & ExtractState<D> & ExtractState<E> & ExtractState<F> & ExtractState<G> & ExtractState<H> & ExtractState<I> >, actionsSelector: Selector< ExtractActions<A> & ExtractActions<B> & ExtractActions<C> & ExtractActions<D> & ExtractActions<E> & ExtractActions<F> & ExtractActions<G> & ExtractActions<H> & ExtractActions<I> >): WithStoreDecorator;
+export function withStore<A extends StateProduct, B extends StateProduct, C extends StateProduct, D extends StateProduct, E extends StateProduct, F extends StateProduct, G extends StateProduct, H extends StateProduct, I extends StateProduct, J extends StateProduct>(states: [ A, B, C, D, E, F, G, H, I, J ], stateSelector: Selector< ExtractState<A> & ExtractState<B> & ExtractState<C> & ExtractState<D> & ExtractState<E> & ExtractState<F> & ExtractState<G> & ExtractState<H> & ExtractState<I> & ExtractState<J> >, actionsSelector: Selector< ExtractActions<A> & ExtractActions<B> & ExtractActions<C> & ExtractActions<D> & ExtractActions<E> & ExtractActions<F> & ExtractActions<G> & ExtractActions<H> & ExtractActions<I> & ExtractActions<J> >): WithStoreDecorator;
