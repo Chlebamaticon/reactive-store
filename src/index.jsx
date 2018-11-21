@@ -11,19 +11,18 @@ class Prevent extends PureComponent {
   }
 }
 
-export function createWithStoreConsumer(Component, state, ...selectors) {
+export function createWithStoreConsumer(Component, state, stateSelector = s => s, actionsSelector = a => a) {
   const { state$, actions } = state;
 
   class WithStore extends PureComponent {
     static displayName = `Connect(${ Component.displayName || Component.name || 'Unknown' })`;
 
     componentDidMount() {
-      const [ 
-        stateSelector = state => state,
-        actionsSelector = actions => actions
-      ] = selectors;
-
-      this.subscription = state$.pipe(map(stateSelector)).subscribe(this.setState.bind(this));
+      this.subscription = state$
+        .pipe(
+            map(stateSelector)
+        )
+        .subscribe(this.setState.bind(this));
       this.actions = actionsSelector(actions);
     }
 

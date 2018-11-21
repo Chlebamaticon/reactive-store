@@ -38,16 +38,16 @@ type ActionPairs<S = any> = Pair<string, ActionPair<S>>;
 export function createActionPairs<S = any>(actionFactories: ActionObservableFactoryMap<S>): ActionPairs<S>;
 export function createActions<S = any>(actionPairs: ActionPairs<S>): ActionMap<S>;
 
-interface StateProduct<S extends State = State, A extends ActionMap<S>> {
+interface StateProduct<S = any, A = any> {
   state$: Observable<S>,
-  actions: A,
+  actions: { [K in keyof A]: Action<S> },
   initialState: S
 }
 
 type ExtractState<S extends StateProduct> = S['initialState'];
 type ExtractActions<S extends StateProduct> = S['actions'];
 
-export function createState<S extends State = State, A = any>(
+export function createState<S = any, A = any>(
   initialState: S,
   actionFactories: A
 ): StateProduct<S, A>;
@@ -65,21 +65,13 @@ export function createMergedState<T extends StateProduct, A extends StateProduct
 
 export function resetState(...states: StateProduct[]): void;
 
-interface Selector<S extends Record> {
-  (fragment: S): any
+interface Selector<S extends {}> {
+    (fragment: S): any
 }
-
-type Selectors<A extends StateProduct> = [ 
-  Selector< ExtractState< A > >, Selector< ExtractActions< A > >
-];
-type Selectors<A extends StateProduct, B extends StateProduct> = [ 
-  Selector< ExtractState< A > & ExtractState< B > >,
-  Selector< ExtractActions< A > & ExtractState< B > >
-];
 
 interface WithStoreDecorator {
   <C extends React.ComponentClass>(c: C): C,
-  <C extends React.StatelessComponent>(c: C): C,
+  <C extends React.FunctionComponent>(c: C): C,
 }
 
 export function withStore<A extends StateProduct>(states: [ A ], stateSelector: Selector< ExtractState< A > >, actionsSelector: Selector< ExtractActions< A > >): WithStoreDecorator;
