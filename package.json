@@ -11,6 +11,12 @@
     "src/index.js"
   ],
   "author": "Dawid Wojda <dawiidio@gmail.com>",
+  "contributors": [
+    { 
+      "name" : "Jakub Chlebowicz", 
+      "url" : "https://github.com/chlebamaticon/"
+    }
+  ]
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --config webpack.config.js",
     "prepublishOnly": "npm run build"
@@ -50,6 +56,7 @@
     "@babel/plugin-transform-runtime": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
+    "@babel/runtime": "^7.1.5",
     "@types/react": "^16.7.6",
     "babel-loader": "^8.0.0",
     "babel-plugin-add-module-exports": "^0.2.1",
@@ -65,7 +72,6 @@
     "webpack-merge": "^4.1.1"
   },
   "dependencies": {
-    "@babel/runtime": "^7.1.5",
     "react": "^16.6.0",
     "react-dom": "^16.6.0",
     "rxjs": "^6.1.0",
