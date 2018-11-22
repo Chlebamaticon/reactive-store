@@ -4,6 +4,7 @@
   "description": "Ractive store with RxJS for React",
   "main": "./lib/index.js",
   "typings": "./src/index.d.ts",
+  "types": "./src/index.d.ts",
   "files": [
     "lib/index.js",
     "src/index.d.ts",

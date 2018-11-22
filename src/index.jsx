@@ -1,58 +1,54 @@
 import React, { PureComponent } from 'react';
-import { Subject, BehaviorSubject } from "rxjs";
-import { of } from "rxjs";
+import { Subject, of } from "rxjs";
 import { publishReplay, refCount, merge, scan, map, skip } from "rxjs/operators";
 
 class Prevent extends PureComponent {
   render() {
-    const { renderComponent, ...rest } = this.props;
-    return renderComponent(rest);
+    const { component: Component, ...rest } = this.props;
+    return (
+      <Component {...rest} />
+    );
   }
 }
 
-export function withStore(...localStates) {
-  return createStoreConnectComponent(createMergedState(...localStates));
-}
+export function createWithStoreConsumer(Component, state, stateSelector = s => s, actionsSelector = a => a) {
+  const { state$, actions } = state;
 
-export function createStoreConnectComponent({ actions: rxActions, state$ }) {
-  const actions = Object.entries(rxActions)
-    .reduce((acc, [key, value]) => ({
-      ...acc,
-      [key]: value
-    }), {});
+  class WithStore extends PureComponent {
+    static displayName = `Connect(${ Component.displayName || Component.name || 'Unknown' })`;
 
-  const defaultStateSelector = state => state;
-  const defaultActionsSelector = actions => actions;
-
-  return (selector = defaultStateSelector, actionsSelector = defaultActionsSelector) => (WrappedComponent) => {
-    const renderComponent = props => <WrappedComponent {...props} />;
-
-    class WithStore extends PureComponent {
-      static displayName = `Connect(${WrappedComponent.displayName || WrappedComponent.name || 'Unknown'})`;
-
-      componentDidMount() {
-        this.subscription = state$.pipe(map(selector)).subscribe(this.setState.bind(this));
-        this.actions = actionsSelector(actions);
-      }
-
-      componentWillUnmount() {
-        this.subscription.unsubscribe();
-      }
-
-      render() {
-        return (
-          <Prevent
-            renderComponent={renderComponent}
-            {...this.state}
-            {...this.actions}
-            {...this.props}
-          />
+    componentDidMount() {
+      this.subscription = state$
+        .pipe(
+            map(stateSelector)
         )
-      }
+        .subscribe(this.setState.bind(this));
+      this.actions = actionsSelector(actions);
     }
 
-    return WithStore;
-  };
+    componentWillUnmount() {
+      this.subscription.unsubscribe();
+    }
+
+    render() {
+      return (
+        <Prevent
+          component={Component}
+          {...this.state}
+          {...this.actions}
+          {...this.props}
+        />
+      )
+    }
+  }
+
+  return WithStore;
+}
+
+export function withStore(states, stateSelector, actionsSelector) {
+  const state = createMergedState(...states);
+
+  return Component => createWithStoreConsumer(Component, state, stateSelector, actionsSelector)
 }
 
 export function createActionPairs(actionFactories) {
