@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
-import { Subject, of } from "rxjs";
-import { publishReplay, refCount, merge, scan, map, skip } from "rxjs/operators";
+import { Observable, Subject, of } from "rxjs";
+import { publishReplay, refCount, merge, scan, map, skip, take } from "rxjs/operators";
 
 class Prevent extends PureComponent {
   render() {
@@ -13,17 +13,19 @@ class Prevent extends PureComponent {
 
 export function createWithStoreConsumer(Component, state, stateSelector = s => s, actionsSelector = a => a) {
   const { state$, actions } = state;
-
   class WithStore extends PureComponent {
     static displayName = `Connect(${ Component.displayName || Component.name || 'Unknown' })`;
 
     componentDidMount() {
-      this.subscription = state$
-        .pipe(
-            map(stateSelector)
-        )
-        .subscribe(this.setState.bind(this));
-      this.actions = actionsSelector(actions);
+      if ( stateSelector ) {
+        this.subscription = state$
+          .pipe( 
+            map(stateSelector) 
+          ).subscribe(this.setState.bind(this));
+      }
+
+      if ( actionsSelector )
+        this.actions = actionsSelector(actions);
     }
 
     componentWillUnmount() {
@@ -99,36 +101,33 @@ export function createState(initialState, actionFactories) {
 }
 
 export function createMergedState(...localStates) {
-  let localStateObservers = [];
+  let rootState$ = Observable.create();
   let rootInitialState = {};
   let rootActions = {};
 
-  localStates.forEach(({ state$: internalState, initialState, actions }) => {
-    localStateObservers.push(internalState.pipe(
-      skip(1) //skip initial values for every state
-    ));
+  for (const { state$, actions, initialState } of localStates) {
+    rootState$ = rootState$.pipe( merge(state$) );
 
-    rootInitialState = {
-      ...rootInitialState,
-      ...initialState
-    };
+    rootInitialState = { 
+      ...rootInitialState, 
+      ...initialState 
+    }
 
     rootActions = {
       ...rootActions,
       ...actions
     };
-  });
+  }
 
-  const state$ = of(rootInitialState).pipe(
-    merge(...localStateObservers),
-    scan((oldState, newState) => ({ ...oldState, ...newState })),
+  rootState$ = rootState$.pipe(
+    scan((acc, state) => ({ ...acc, ...state }), rootInitialState),
     publishReplay(1),
     refCount()
   );
 
   return {
     actions: rootActions,
-    state$,
+    state$: rootState$,
     initialState: rootInitialState
   }
 }
