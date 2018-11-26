@@ -1,5 +1,5 @@
 {
-  "name": "@dawiidio/reactive-store",
+  "name": "react-reactive-store",
   "version": "0.1.1",
   "description": "Ractive store with RxJS for React",
   "main": "./lib/index.js",
