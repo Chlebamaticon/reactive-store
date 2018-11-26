@@ -11,7 +11,7 @@ npm run build
 
 ### NPM install
 ```bash
-npm i -P @dawiidio/reactive-store
+npm i -P @_dawiidio/react-rx-store
 ```
 
 ### Simple case study:
