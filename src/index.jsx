@@ -1,6 +1,8 @@
 import React, { PureComponent } from 'react';
 import { Observable, Subject, of } from "rxjs";
-import { publishReplay, refCount, merge, scan, map, skip, take } from "rxjs/operators";
+import { publishReplay, refCount, merge, scan, map } from "rxjs/operators";
+
+const defaultSelector = state => state;
 
 class Prevent extends PureComponent {
   render() {
@@ -11,17 +13,19 @@ class Prevent extends PureComponent {
   }
 }
 
-export function createWithStoreConsumer(Component, state, stateSelector = s => s, actionsSelector = a => a) {
+export function createWithStoreConsumer(Component, state, stateSelector = defaultSelector, actionsSelector = defaultSelector) {
   const { state$, actions } = state;
+
   class WithStore extends PureComponent {
     static displayName = `Connect(${ Component.displayName || Component.name || 'Unknown' })`;
+    actions = {};
+    subscription = null;
 
     componentDidMount() {
       if ( stateSelector ) {
         this.subscription = state$
-          .pipe( 
-            map(stateSelector) 
-          ).subscribe(this.setState.bind(this));
+          .pipe(map(stateSelector))
+          .subscribe(this.setState.bind(this));
       }
 
       if ( actionsSelector )
@@ -29,7 +33,7 @@ export function createWithStoreConsumer(Component, state, stateSelector = s => s
     }
 
     componentWillUnmount() {
-      this.subscription.unsubscribe();
+      this.subscription?.unsubscribe();
     }
 
     render() {
@@ -67,9 +71,9 @@ export function createActionPairs(actionFactories) {
 export function createActions(actionPairs) {
   return actionPairs
     .reduce((acc, actionPair) => {
-      const [ 
-        key, 
-        { subject, observable } 
+      const [
+        key,
+        { subject, observable }
       ] = actionPair;
 
       return { ...acc, [ key ]: value => subject.next(value) };
@@ -82,7 +86,7 @@ export function createState(initialState, actionFactories) {
     reset(subject) {
       return subject.pipe( map(() => () => initialState) );
     }
-  }
+  };
   const actionPairs = createActionPairs(_actionFactories);
   const actions = createActions(actionPairs, initialState);
 
@@ -108,10 +112,10 @@ export function createMergedState(...localStates) {
   for (const { state$, actions, initialState } of localStates) {
     rootState$ = rootState$.pipe( merge(state$) );
 
-    rootInitialState = { 
-      ...rootInitialState, 
-      ...initialState 
-    }
+    rootInitialState = {
+      ...rootInitialState,
+      ...initialState
+    };
 
     rootActions = {
       ...rootActions,
@@ -133,7 +137,5 @@ export function createMergedState(...localStates) {
 }
 
 export function resetState(...states) {
-  for (const { actions } of states)
-    if ( actions.reset ) 
-      actions.reset();
+  states.forEach(state => state?.reset());
 }
