@@ -21,16 +21,23 @@ export function createWithStoreConsumer(Component, state, stateSelector = defaul
     actions = {};
     subscription = null;
 
-    componentDidMount() {
+    constructor(props) {
+      super(props);
+
       if ( stateSelector ) {
         this.subscription = state$
-          .pipe(map(stateSelector))
-          .subscribe(this.setState.bind(this));
+          .pipe( map(stateSelector) )
+          .subscribe(state => {
+            if ( this.state ) 
+              return this.setState.call(this, state);
+            this.state = state;
+          });
       }
 
       if ( actionsSelector )
         this.actions = actionsSelector(actions);
     }
+
 
     componentWillUnmount() {
       this.subscription?.unsubscribe();
