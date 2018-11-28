@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
-import { Observable, Subject, of } from "rxjs";
-import { tap, shareReplay, refCount, merge, scan, map } from "rxjs/operators";
+import { Subject, of } from "rxjs";
+import { shareReplay, merge, scan, map } from "rxjs/operators";
 
 const defaultSelector = state => state;
 
