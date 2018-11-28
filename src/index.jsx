@@ -24,13 +24,15 @@ export function createWithStoreConsumer(Component, state, stateSelector = defaul
     constructor(props) {
       super(props);
 
-      this.subscription = state$
-        .pipe( map(stateSelector || (() => ({})) ) )
-        .subscribe(state => {
-          if ( this.state ) 
-            return this.setState.call(this, state);
-          this.state = state;
-        });
+      if ( stateSelector ) {
+        this.subscription = state$
+          .pipe( map( stateSelector ) )
+          .subscribe(state => {
+            if ( this.state ) 
+              return this.setState.call(this, state);
+            this.state = state;
+          });
+      }
 
       if ( actionsSelector )
         this.actions = actionsSelector(actions);
@@ -100,6 +102,8 @@ export function createState(initialState, actionFactories) {
     scan( (state, reducerFn) => reducerFn(state) ),
     shareReplay(1)
   );
+
+  state$.subscribe();
 
   return {
     state$,
