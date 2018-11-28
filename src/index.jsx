@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
-import { Observable, Subject, of } from "rxjs";
-import { publishReplay, refCount, merge, scan, map } from "rxjs/operators";
+import { Subject, of } from "rxjs";
+import { shareReplay, merge, scan, map } from "rxjs/operators";
 
 const defaultSelector = state => state;
 
@@ -26,7 +26,7 @@ export function createWithStoreConsumer(Component, state, stateSelector = defaul
 
       if ( stateSelector ) {
         this.subscription = state$
-          .pipe( map(stateSelector) )
+          .pipe( map( stateSelector ) )
           .subscribe(state => {
             if ( this.state ) 
               return this.setState.call(this, state);
@@ -100,9 +100,10 @@ export function createState(initialState, actionFactories) {
   const state$ = of(initialState).pipe(
     merge( ...actionPairs.map( ([ , { observable } ]) => observable) ),
     scan( (state, reducerFn) => reducerFn(state) ),
-    publishReplay( 1 ),
-    refCount(),
+    shareReplay(1)
   );
+
+  state$.subscribe();
 
   return {
     state$,
@@ -112,7 +113,7 @@ export function createState(initialState, actionFactories) {
 }
 
 export function createMergedState(...localStates) {
-  let rootState$ = Observable.create();
+  let rootState$ = of({});
   let rootInitialState = {};
   let rootActions = {};
 
@@ -131,9 +132,8 @@ export function createMergedState(...localStates) {
   }
 
   rootState$ = rootState$.pipe(
-    scan((acc, state) => ({ ...acc, ...state }), rootInitialState),
-    publishReplay(1),
-    refCount()
+    scan((acc, state) => ({ ...acc, ...state })),
+    shareReplay(1)
   );
 
   return {
