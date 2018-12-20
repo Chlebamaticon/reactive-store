@@ -1,12 +1,30 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent, Component } from 'react';
 import { Subject, of } from "rxjs";
 import { shareReplay, merge, scan, map } from "rxjs/operators";
 
 const defaultSelector = state => state;
 
-class Prevent extends PureComponent {
+class Prevent extends Component {
+  shouldComponentUpdate(newObj) {
+    const prevObj = this.props;
+
+    for (const key in newObj){
+      if (Array.isArray(newObj[key])){
+        if (newObj[key].findIndex((item, idx) => item !== prevObj[key][idx]) !== -1)
+          return true;
+      }
+      else {
+        if (newObj[key] !== prevObj[key])
+          return true;
+      }
+    }
+
+    return false;
+  }
+
   render() {
     const { component: Component, ...rest } = this.props;
+
     return (
       <Component {...rest} />
     );
@@ -26,9 +44,9 @@ export function createWithStoreConsumer(Component, state, stateSelector = defaul
 
       if ( stateSelector ) {
         this.subscription = state$
-          .pipe( map( stateSelector ) )
+          .pipe( map( (state) => stateSelector(state, props) ) )
           .subscribe(state => {
-            if ( this.state ) 
+            if ( this.state )
               return this.setState.call(this, state);
             this.state = state;
           });
