@@ -4,22 +4,33 @@ import { merge, scan, map } from "rxjs/operators";
 
 const defaultSelector = state => state;
 
-class Prevent extends Component {
-  shouldComponentUpdate(newObj) {
-    const prevObj = this.props;
+function shallowUpdate (previous, next) {
+  let shallow = false;
+  const prevKeys = Object.keys(previous);
+  const nextKeys = Object.keys(next);
 
-    for (const key in newObj){
-      if (Array.isArray(newObj[key])){
-        if (newObj[key].findIndex((item, idx) => item !== prevObj[key][idx]) !== -1)
-          return true;
-      }
-      else {
-        if (newObj[key] !== prevObj[key])
-          return true;
-      }
+  shallow = prevKeys.length !== nextKeys.length;
+
+  if ( !shallow ) {
+    for (const key of nextKeys) {
+      if ( Array.isArray(previous[key]) && Array.isArray(next[key]) )
+        shallow = shallowUpdate(previous[key], next[key]);
+      else
+        shallow = previous[key] !== next[key];
+
+      if (shallow)
+        return shallow;
     }
+  }
 
-    return false;
+  return shallow;
+}
+
+class Prevent extends Component {
+  shouldComponentUpdate(nextProps) {
+    const previousProps = this.props;
+
+    return shallowUpdate(previousProps, nextProps);
   }
 
   render() {
