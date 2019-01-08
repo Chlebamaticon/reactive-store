@@ -1,6 +1,6 @@
 import React, { PureComponent, Component } from 'react';
-import { Subject, of } from "rxjs";
-import { shareReplay, merge, scan, map } from "rxjs/operators";
+import { Subject, of, BehaviorSubject } from "rxjs";
+import { merge, scan, map } from "rxjs/operators";
 
 const defaultSelector = state => state;
 
@@ -98,10 +98,10 @@ export function createActions(actionPairs) {
     .reduce((acc, actionPair) => {
       const [
         key,
-        { subject, observable }
+        { subject }
       ] = actionPair;
 
-      return { ...acc, [ key ]: value => subject.next(value) };
+      return { ...acc, [ key ]: state => subject.next(state) };
     }, {});
 }
 
@@ -115,29 +115,25 @@ export function createState(initialState, actionFactories) {
   const actionPairs = createActionPairs(_actionFactories);
   const actions = createActions(actionPairs, initialState);
 
-  const state$ = of(initialState).pipe(
-    merge( ...actionPairs.map( ([ , { observable } ]) => observable) ),
-    scan( (state, reducerFn) => reducerFn(state) ),
-    shareReplay(1)
-  );
-
-  state$.subscribe();
+  const state$ = new BehaviorSubject();
+  const subscription = of(initialState)
+    .pipe(
+      merge( ...actionPairs.map( ([ , { observable } ]) => observable) ),
+      scan( (state, reducerFn) => reducerFn(state)),
+    ).subscribe(state => state$.next(state));
 
   return {
-    state$,
+    state$: state$.asObservable(),
     actions,
     initialState
   }
 }
 
 export function createMergedState(...localStates) {
-  let rootState$ = of({});
   let rootInitialState = {};
   let rootActions = {};
 
-  for (const { state$, actions, initialState } of localStates) {
-    rootState$ = rootState$.pipe( merge(state$) );
-
+  for (const { actions, initialState } of localStates) {
     rootInitialState = {
       ...rootInitialState,
       ...initialState
@@ -149,14 +145,17 @@ export function createMergedState(...localStates) {
     };
   }
 
-  rootState$ = rootState$.pipe(
-    scan((acc, state) => ({ ...acc, ...state })),
-    shareReplay(1)
-  );
+  const rootState$ = new BehaviorSubject();
+  const subscription = of(rootInitialState)
+    .pipe(
+      merge(...localStates.map(({ state$ }) => state$)),
+      scan((acc, state) => ({ ...acc, ...state })),
+    )
+    .subscribe(state => rootState$.next(state));
 
   return {
+    state$: rootState$.asObservable(),
     actions: rootActions,
-    state$: rootState$,
     initialState: rootInitialState
   }
 }
